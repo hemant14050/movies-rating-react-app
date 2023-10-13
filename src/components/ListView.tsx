@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import {config} from "../../config";
 const {API_KEY} = config;
-let API_URL = `https://api.themoviedb.org/3/movie/top_rated?api_key=${API_KEY}&language=en-US&page=1`;
+let API_URL: string;
 import Loader from "./Loader";
 
 const ListView: React.FC = () => {
@@ -19,16 +19,19 @@ const ListView: React.FC = () => {
   const [listOrder, setListOrder] = useState<string>("ascending");
   const [apiResults, setApiResults] = useState<Movie[]>([]);
   const [filteredApiResults, setFilteredApiResults] = useState<Movie[]>([]);
+  const [page, setPage] = useState<number>(1);
 
   useEffect(() => {
     fetchMoviesData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchText]);
+  }, [searchText, page]);
 
   const fetchMoviesData = async () => {
     try {
       if(searchText !== "") {
-        API_URL = `https://api.themoviedb.org/3/search/movie?query=${searchText}&api_key=${API_KEY}&language=en-US&page=1`;
+        API_URL = `https://api.themoviedb.org/3/search/movie?query=${searchText}&api_key=${API_KEY}&language=en-US&page=${page}`;
+      } else {
+        API_URL = `https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}&language=en-US&page=${page}`;
       }
       const response = await axios.get(API_URL);
       setApiResults(response.data.results);
@@ -79,6 +82,7 @@ const ListView: React.FC = () => {
           className="w-full px-3 py-2 rounded-md outline-none"
           onChange={(e) => {
             setSearchText(e.target.value);
+            setPage(1);
           }}
           value={searchText}
         />
@@ -154,7 +158,7 @@ const ListView: React.FC = () => {
                 <img
                   src={`https://image.tmdb.org/t/p/w500/${movie.poster_path}`}
                   alt=""
-                  className="w-20 h-25 rounded-md"
+                  className="w-20 h-25 rounded-md object-cover"
                 />
                 <div>
                   <h3 className="text-lg font-semibold">{movie.title}</h3>
@@ -166,6 +170,33 @@ const ListView: React.FC = () => {
               </li>
             );
           })}
+          {
+            filteredApiResults.length > 0 && (
+              <div className="flex justify-between">
+                {
+                  page > 1 && (
+                    <button
+                      className="bg-blue-200 p-2 rounded-md mr-auto"
+                      onClick={() => {
+                        setPage(page - 1);
+                      }}
+                    >
+                      Previous
+                    </button>
+                  )
+                }
+
+                <button
+                  className="bg-blue-200 p-2 rounded-md ml-auto"
+                  onClick={() => {
+                    setPage(page + 1);
+                  }}
+                >
+                  Next
+                </button>
+              </div>
+            )
+          }
         </ul>
       </div>
     </div>
